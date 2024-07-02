@@ -13,9 +13,8 @@ quizRoute.get("/all", async (request: Request, response: Response) => {
 })
 
 quizRoute.post("/create", async (request: Request, response: Response) => {
-  console.log(request.body);
   
-  const result = await dataBaseAccess.collection("quizList").insertOne(JSON.parse(request.body));
+  const result = await dataBaseAccess.collection("quizList").insertOne(request.body);
 
   result
   ? response.status(201).send("Quiz criado com êxito")
