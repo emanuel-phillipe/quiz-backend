@@ -8,7 +8,12 @@ import { quizRoute } from "./routes/quizRouting";
 dotenv.config();
 
 var app = Express();
-app.use(cors());
+
+const corsOptions = {
+  origin: "*"
+}
+
+app.use(cors(corsOptions));
 app.use(json());
 
 export var dataBaseAccess: Db;
