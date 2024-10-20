@@ -3,8 +3,17 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "build": "rimraf dist && tsc",
+    "ts.check": "tsc --project tsconfig.json",
+    "add-build": "git add dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "pre-commit": [
+    "ts.check",
+    "build",
+    "add-build"
+  ],
   "keywords": [],
   "author": "Emanuel Phillipe",
   "license": "ISC",
@@ -13,7 +22,9 @@
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.1.0",
     "@types/socket.io": "^3.0.1",
+    "pre-commit": "^1.2.2",
     "prisma": "^5.17.0",
+    "rimraf": "^6.0.1",
     "tsx": "^4.16.5",
     "typescript": "^5.5.4"
   },
