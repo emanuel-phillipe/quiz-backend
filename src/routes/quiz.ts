@@ -16,7 +16,7 @@ const quiz_creation_body_zod_schema = z.object({
 })
 
 const quiz_remotion_body_zod_schema = z.object({
-  quizId: z.string()
+  quizId: z.string().array()
 })
 
 export default async function quizRoutes(app:FastifyInstance){
@@ -60,16 +60,22 @@ export default async function quizRoutes(app:FastifyInstance){
     let requestBody = quiz_remotion_body_zod_schema.parse(request.body)
     const requestUser = (request as any).user
 
-    const quizToDelete = await prisma.quiz.findFirst({where: {id: requestBody.quizId}})
+    const quizesToDelete = await prisma.quiz.findMany({where: {id: {in: requestBody.quizId}}})
 
-    if(!quizToDelete) return response.status(404).send({"info": "Quiz not found"})
-    if(quizToDelete.creatorId != requestUser.id || requestUser.type != "ADMIN") return response.status(401).send({"info": "User does not have permission to do this"})
+    let unauthorizedQuizes = 0;
 
-    await prisma.question.deleteMany({where: {quizId: quizToDelete.id}})
-    await prisma.quiz.delete({where: {id: quizToDelete.id}})
+    quizesToDelete.map((quiz) => {      
+      if(quiz.creatorId != requestUser.id) unauthorizedQuizes++
+    })
 
-    return response.status(200).send({"info": "Quiz deleted"})
+    if(unauthorizedQuizes >= 1){
+      if(requestUser.type == "COMMON") return response.status(401).send({"info": "User does not have permission to do this"})
+    }
 
+    await prisma.question.deleteMany({where: {quizId: {in: requestBody.quizId}}})
+    await prisma.quiz.deleteMany({where: {id: {in: requestBody.quizId}}})
+
+    return response.status(200).send({"info": "Quiz(es) deleted"})
   })
 }
 // model Quiz {
