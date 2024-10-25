@@ -15,6 +15,20 @@ const quiz_creation_body_zod_schema = z.object({
   }).array()
 })
 
+const quiz_editing_body_zod_schema = z.object({
+  quizId: z.string().optional(),
+  title: z.string(),
+  creators: z.string().array(),
+  questions: z.object({
+    header: z.string(),
+    quizId: z.string(),
+    options: z.string().array(),
+    answer: z.string(),
+    descriptions: z.string().array(),
+    latex: z.boolean(),
+  }).array()
+})
+
 const quiz_remotion_body_zod_schema = z.object({
   quizId: z.string().array()
 })
@@ -76,6 +90,29 @@ export default async function quizRoutes(app:FastifyInstance){
     await prisma.quiz.deleteMany({where: {id: {in: requestBody.quizId}}})
 
     return response.status(200).send({"info": "Quiz(es) deleted"})
+  })
+
+  app.put("/update", {onRequest: [(app as any).authenticate]}, async (request:FastifyRequest, response) => {
+
+    try{
+      var requestBody = quiz_editing_body_zod_schema.parse(request.body)
+    }catch(err){
+      console.log(err);
+      return
+    }
+
+    const quizOldVersion = await prisma.quiz.findFirst({where: {id: requestBody.quizId}})
+
+    if(!quizOldVersion) return response.status(404).send({"info": "Quiz not found"})
+
+    let { questions: _, ...quizWithoutQuestionsAndQuizIdFiltered } = requestBody;
+    delete quizWithoutQuestionsAndQuizIdFiltered.quizId
+
+    await prisma.question.deleteMany({where: {quizId: quizOldVersion.id}})
+    await prisma.quiz.update({data: quizWithoutQuestionsAndQuizIdFiltered, where: {id: quizOldVersion.id}})
+    await prisma.question.createMany({data: requestBody.questions})
+
+    return response.status(200).send({"info": "Quiz updated"})
   })
 }
 // model Quiz {
