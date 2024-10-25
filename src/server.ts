@@ -18,6 +18,7 @@ app.decorate("authenticate", async function(request:FastifyRequest, response:Fas
   try {
     await request.jwtVerify()
   } catch (err) {
+    console.log(err);
     return response.status(401).send({"info": "User not authenticated"})
   }
 })

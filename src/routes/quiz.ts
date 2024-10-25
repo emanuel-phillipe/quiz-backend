@@ -69,7 +69,7 @@ export default async function quizRoutes(app:FastifyInstance){
 
   })
 
-  app.delete("/delete", {onRequest: [(app as any).authenticate]}, async (request: FastifyRequest, response) => {
+  app.post("/delete", {onRequest: [(app as any).authenticate]}, async (request: FastifyRequest, response) => {
 
     let requestBody = quiz_remotion_body_zod_schema.parse(request.body)
     const requestUser = (request as any).user
