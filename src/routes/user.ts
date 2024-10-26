@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt"
@@ -16,6 +16,10 @@ const user_delect_body_zod_schema = z.object({
   email: z.string(),
 })
 
+const user_find_body_zod_schema = z.object({
+  name: z.string(),
+})
+
 export default async function userRoutes(app:FastifyInstance){
 
   //GET /user (id)
@@ -27,13 +31,30 @@ export default async function userRoutes(app:FastifyInstance){
     return response.status(200).send(user)
   })
 
+  app.post("/find", {onRequest: [(app as any).authenticate]}, async (request:FastifyRequest, response) => {
+
+    const requestBody = user_find_body_zod_schema.parse(request.body)
+
+    const foundUser = await prisma.user.findMany({where: {fullName: {contains: requestBody.name}}})
+
+    return response.status(200).send({info: foundUser})
+  })
+
   // POST /user/create
   app.post("/create", async (request:FastifyRequest, response) => {
 
     const requestBody = user_creation_body_zod_schema.parse(request.body)
     const hashedPassword = await bcrypt.hash(requestBody.password, 10);
 
-    await prisma.user.create({data: {...requestBody, password: hashedPassword}}).then((user) => {
+    let name = requestBody.fullName.split(" ");
+
+    for (let i = 0; i < name.length; i++) {
+      name[i] = name[i][0].toUpperCase() + name[i].substr(1);
+    }
+
+    const fullname = name.join(" ");
+
+    await prisma.user.create({data: {...requestBody, fullName: fullname, password: hashedPassword}}).then((user) => {
       return response.status(201).send({"info": "User created", "id": user.id})
     }).catch((err) => {
       if(err.code === "P2002") return response.status(403).send({"info": "Info already used"})
