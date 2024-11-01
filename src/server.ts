@@ -67,7 +67,7 @@ app.register(userRoutes, {prefix: "/user"})
 app.register(quizRoutes, {prefix: "/quiz"})
 app.register(authRoutes, {prefix: "/auth"})
 
-app.listen(3000, () => {
+app.listen({port: 3000}, () => {
   console.log(" ");
   console.log("Quiz Server is running");
   console.log(" ");
