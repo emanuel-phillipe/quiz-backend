@@ -1,7 +1,8 @@
 import type { Quiz, User } from "@prisma/client";
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
+import type { Http2ServerResponse } from "http2";
 
 const quiz_creation_body_zod_schema = z.object({
   title: z.string(),
