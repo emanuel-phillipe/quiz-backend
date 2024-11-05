@@ -22,11 +22,20 @@ const user_find_body_zod_schema = z.object({
 
 export default async function userRoutes(app:FastifyInstance){
 
-  //GET /user (id)
+  //GET /user
   app.get("/", {onRequest: [(app as any).authenticate]}, async (request:FastifyRequest, response) => {
 
-    const user = (request as any).user //await prisma.user.findFirst({where: {id: request.params.id}})
+    let userTokenized = (request as any).user //await prisma.user.findFirst({where: {id: request.params.id}})
+    let user = await prisma.user.findFirst({where: {id: userTokenized.id}})
+
+    delete userTokenized["iat"]  
+
     if(!user) return response.status(404).send({"message": "User not found"})
+
+    if(user.fullName != userTokenized.fullName) return response.status(403).send({"message": "Different information"})
+    if(user.school != userTokenized.school) return response.status(403).send({"message": "Different information"})
+    if(user.email != userTokenized.email) return response.status(403).send({"message": "Different information"})
+    if(user.type != userTokenized.type) return response.status(403).send({"message": "Different information"})
 
     return response.status(200).send(user)
   })
